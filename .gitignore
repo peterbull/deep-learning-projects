@@ -40,3 +40,7 @@ venv
 app.db
 
 .cfg
+
+
+# questions
+questions.ipynb

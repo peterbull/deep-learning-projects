@@ -2,8 +2,9 @@
 
 # %% auto 0
 __all__ = ['mnist_path', 'nines', 'sixes', 'nines_tens', 'sixes_tens', 'stacked_nines', 'stacked_sixes', 'mean_stacked_nines',
-           'mean_stacked_sixes', 'im_9', 'im_6', 'train_x', 'train_y', 'dset', 'x', 'y', 'valid_x', 'valid_y',
-           'valid_dset', 'bias', 'corrects', 'init_params', 'linear1']
+           'mean_stacked_sixes', 'im_9', 'im_6', 'valid_nines_tens', 'valid_sixes_tens', 'train_x', 'train_y', 'dset',
+           'x', 'y', 'valid_x', 'valid_y', 'valid_dset', 'weights', 'bias', 'preds', 'corrects', 'init_params',
+           'linear1']
 
 # %% ../04_ch_pt_2.ipynb 2
 from ipywidgets import interact
@@ -40,6 +41,15 @@ mean_stacked_sixes = stacked_sixes.mean(0)
 im_9 = stacked_nines[2]
 im_6 = stacked_sixes[2]
 
+# %% ../04_ch_pt_2.ipynb 36
+valid_nines_tens = torch.stack([tensor(Image.open(o))
+                                for o in (mnist_path/'testing'/'9').ls()])
+valid_sixes_tens = torch.stack([tensor(Image.open(o))
+                                for o in (mnist_path/'testing'/'6').ls()])
+valid_nines_tens = valid_nines_tens.float()/255
+valid_sixes_tens = valid_sixes_tens.float()/255
+valid_nines_tens.shape, valid_sixes_tens.shape                                
+
 # %% ../04_ch_pt_2.ipynb 128
 train_x = torch.cat([stacked_nines, stacked_sixes]).view(-1, 28*28)
 
@@ -66,6 +76,9 @@ x, y = dset[0]
 def init_params(size, std=1.0):
     return (torch.randn(size)*std).requires_grad_()
 
+# %% ../04_ch_pt_2.ipynb 152
+weights = init_params(28*28)
+
 # %% ../04_ch_pt_2.ipynb 154
 bias = init_params(1)
 
@@ -73,6 +86,10 @@ bias = init_params(1)
 def linear1(xb):
     return xb@weights + bias
 
-# %% ../04_ch_pt_2.ipynb 162
+# %% ../04_ch_pt_2.ipynb 159
+preds = linear1(train_x)
+
+# %% ../04_ch_pt_2.ipynb 163
 corrects = (preds>0.0).float() == train_y
+print(corrects), len(corrects)
 
