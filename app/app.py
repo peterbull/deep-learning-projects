@@ -3,8 +3,8 @@
 # %% auto 0
 __all__ = ['mnist_path', 'nines', 'sixes', 'nines_tens', 'sixes_tens', 'stacked_nines', 'stacked_sixes', 'mean_stacked_nines',
            'mean_stacked_sixes', 'im_9', 'im_6', 'valid_nines_tens', 'valid_sixes_tens', 'train_x', 'train_y', 'dset',
-           'x', 'y', 'valid_x', 'valid_y', 'valid_dset', 'weights', 'bias', 'preds', 'corrects', 'init_params',
-           'linear1']
+           'x', 'y', 'valid_x', 'valid_y', 'valid_dset', 'weights', 'bias', 'preds', 'corrects', 'dl', 'xb', 'yb',
+           'valid_dl', 'init_params', 'linear1', 'mnist_loss']
 
 # %% ../04_ch_pt_2.ipynb 2
 from ipywidgets import interact
@@ -53,43 +53,69 @@ valid_nines_tens.shape, valid_sixes_tens.shape
 # %% ../04_ch_pt_2.ipynb 128
 train_x = torch.cat([stacked_nines, stacked_sixes]).view(-1, 28*28)
 
-# %% ../04_ch_pt_2.ipynb 130
+# %% ../04_ch_pt_2.ipynb 132
 train_y = tensor([1]*len(nines) + [0]*len(sixes)).unsqueeze(1)
 
-# %% ../04_ch_pt_2.ipynb 138
+# %% ../04_ch_pt_2.ipynb 140
 dset = list(zip(train_x, train_y))
 x,y = dset[0]
 
-# %% ../04_ch_pt_2.ipynb 142
+# %% ../04_ch_pt_2.ipynb 144
 valid_x = torch.cat([valid_nines_tens, valid_sixes_tens]).view(-1,784)
 
-# %% ../04_ch_pt_2.ipynb 144
+# %% ../04_ch_pt_2.ipynb 146
 valid_y = tensor([1]*len(valid_nines_tens) + [0]*len(valid_sixes_tens)).unsqueeze(1)
 
-# %% ../04_ch_pt_2.ipynb 146
+# %% ../04_ch_pt_2.ipynb 148
 valid_dset = list(zip(valid_x, valid_y))
 
-# %% ../04_ch_pt_2.ipynb 148
+# %% ../04_ch_pt_2.ipynb 150
 x, y = dset[0]
 
-# %% ../04_ch_pt_2.ipynb 151
+# %% ../04_ch_pt_2.ipynb 153
 def init_params(size, std=1.0):
     return (torch.randn(size)*std).requires_grad_()
 
-# %% ../04_ch_pt_2.ipynb 152
+# %% ../04_ch_pt_2.ipynb 154
 weights = init_params(28*28)
 
-# %% ../04_ch_pt_2.ipynb 154
+# %% ../04_ch_pt_2.ipynb 156
 bias = init_params(1)
 
-# %% ../04_ch_pt_2.ipynb 158
+# %% ../04_ch_pt_2.ipynb 160
 def linear1(xb):
     return xb@weights + bias
 
-# %% ../04_ch_pt_2.ipynb 159
+# %% ../04_ch_pt_2.ipynb 161
 preds = linear1(train_x)
 
-# %% ../04_ch_pt_2.ipynb 163
+# %% ../04_ch_pt_2.ipynb 165
 corrects = (preds>0.0).float() == train_y
 print(corrects), len(corrects)
 
+
+# %% ../04_ch_pt_2.ipynb 166
+with torch.no_grad(): weights[0] *= 1.0001
+
+# %% ../04_ch_pt_2.ipynb 167
+preds = linear1(train_x)
+((preds>0.0).float() == train_y).float().mean().item()
+
+# %% ../04_ch_pt_2.ipynb 179
+def mnist_loss(predictions, targets):
+    predictions = predictions.sigmoid()
+    return torch.where(targets==1, 1-predictions, predictions).mean()
+
+
+# %% ../04_ch_pt_2.ipynb 187
+weights = init_params((28*28,1))
+bias = init_params(1)
+
+
+# %% ../04_ch_pt_2.ipynb 189
+dl = DataLoader(dset, batch_size=256)
+xb, yb = first(dl)
+xb.shape, yb.shape
+
+# %% ../04_ch_pt_2.ipynb 191
+valid_dl = DataLoader(valid_dset, batch_size=256)
